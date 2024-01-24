@@ -2,18 +2,20 @@ const Credential = require('../models/credential');
 const redis = require('redis');
 const config = require('../config/config');
 
-const client = redis.createClient(config.redis);
-
-client.on('error', (err) => {
-    console.log(`Error: ${err}`);
-});
-
-const addCredential = async (req, res) => {
+const { connectToRedis } = require('../utils');
+const addCredential = async (redisClient, req, res) => {
     try {
         const newCredential = new Credential(req.body);
         await newCredential.save();
-        //TODO fix publish to Redis
-        //client.publish('credentials', JSON.stringify({ eventType: 'update' }));
+
+        const event = {
+            eventType: 'create',
+            credential: req.body,
+            timestamp: new Date().toISOString(), 
+        };
+
+        // Add event at the beginning of list
+        redisClient.rPush('credentialsQueue6', JSON.stringify(event));
         res.json({ success: true });
     } catch (error) {
         console.error('Error adding credential:', error);

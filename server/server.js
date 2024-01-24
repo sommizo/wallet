@@ -30,6 +30,7 @@ async function initialize() {
 }
 
 const initializeCredentials = async (redisClient) => {
+
   const initialCredentials = [
     { walletId: 34, credentialType: 'diplome', credential: { nom: 'bac', annee: 2023, etablissement: 'lycee Émile Sabord' } },
     { walletId: 34, credentialType: 'driver licence', credential: { annee: 2020, id: '33434', type: 'B', firstname: 'Mehdi', lastname: 'Khaman' } },
@@ -38,7 +39,7 @@ const initializeCredentials = async (redisClient) => {
 
   try {
     for (const credentialData of initialCredentials) {
-      await addCredential({ body: credentialData }, { json: () => { } }, redisClient);
+      await addCredential(redisClient, { body: credentialData }, { json: () => { } });
     }
 
     console.log('Credentials initialized successfully');
@@ -46,21 +47,3 @@ const initializeCredentials = async (redisClient) => {
     console.error('Failed to initialize credentials with error - ', error);
   }
 };
-
-// const initializeCredentials = async () => {
-//   const initialCredentials = [
-//     { walletId: 34, credentialType: 'diplome', credential: { nom: 'bac', annee: 2023, etablissement: 'lycee Émile Sabord' } },
-//     { walletId: 34, credentialType: 'driver licence', credential: { annee: 2020, id: '33434', type: 'B', firsname: 'Mehdi', lastname: 'Khaman' } },
-//     { walletId: 34, credentialType: 'employee', credential: { firstname: 'mehdi', lastname: 'khaman', annee: 2020, matricule: '434', role: 'manager bu digital trust services' } }
-//   ];
-
-//   try {
-//     for (const credentialData of initialCredentials) {
-//       await addCredential({ body: credentialData }, { json: () => { } });
-//     }
-
-//     console.log('Credentials initialized successfully');
-//   } catch (error) {
-//     console.error('Failed to initialize credentials with error - ', error);
-//   }
-// }
