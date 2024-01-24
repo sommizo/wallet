@@ -2,7 +2,6 @@ const Credential = require('../models/credential');
 const redis = require('redis');
 const config = require('../config/config');
 
-const { connectToRedis } = require('../utils');
 const addCredential = async (redisClient, req, res) => {
     try {
         const newCredential = new Credential(req.body);

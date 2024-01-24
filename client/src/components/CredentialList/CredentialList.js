@@ -4,10 +4,10 @@ function CredentialList() {
     const [credentials, setCredentials] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const API_GET_CREDENTIALS_URL = '/api/getCredentials';
+    const API_GET_CREDENTIALS_URL = 'http://localhost:3001/api/getCredentials';
 
     useEffect(() => {
-        // Fetch credentials on component
+        // Fetch credentials
         fetch(API_GET_CREDENTIALS_URL)
             .then(response => {
                 if (!response.ok) {
@@ -15,7 +15,13 @@ function CredentialList() {
                 }
                 return response.json();
             })
-            .then(data => setCredentials(data))
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    setCredentials(data);
+                } else {
+                    throw new Error('Empty or invalid response');
+                }
+            })
             .catch(err => setError(err))
             .finally(() => setLoading(false));
     }, []);
