@@ -12,9 +12,11 @@ const addCredential = async (req, res) => {
     try {
         const newCredential = new Credential(req.body);
         await newCredential.save();
-        client.publish('credentials', JSON.stringify({ eventType: 'update' }));
+        //TODO fix publish to Redis
+        //client.publish('credentials', JSON.stringify({ eventType: 'update' }));
         res.json({ success: true });
     } catch (error) {
+        console.error('Error adding credential:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };

@@ -14,21 +14,38 @@ async function connectToMongo() {
   }
 }
 
-async function connectToRedis() {
+// async function connectToRedis() {
+//   const redisClient = redis.createClient({ url: config.redis.url });
+
+//   try {
+//     await new Promise((resolve, reject) => {
+//       redisClient.connect();
+//       redisClient.on('connect', resolve);
+//       redisClient.on('error', (err) => reject(err));
+//     });
+
+//     console.log('Connected to Redis');
+//   } catch (err) {
+//     console.error('Failed to connect to Redis with error - ', err);
+//   }
+// }
+const connectToRedis = async () => {
   const redisClient = redis.createClient({ url: config.redis.url });
 
-  try {
-    await new Promise((resolve, reject) => {
-      redisClient.connect();
-      redisClient.on('connect', resolve);
-      redisClient.on('error', (err) => reject(err));
+  return new Promise((resolve, reject) => {
+    redisClient.connect();
+    redisClient.on('connect', () => {
+      console.log('Connected to Redis');
+      resolve(redisClient);
     });
 
-    console.log('Connected to Redis');
-  } catch (err) {
-    console.error('Failed to connect to Redis with error - ', err);
-  }
-}
+    redisClient.on('error', (err) => {
+      console.error('Failed to connect to Redis with error - ', err);
+      reject(err);
+    });
+  });
+};
+
 
 module.exports = {
   connectToMongo,
