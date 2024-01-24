@@ -19,6 +19,7 @@ async function connectToRedis() {
 
   try {
     await new Promise((resolve, reject) => {
+      redisClient.connect();
       redisClient.on('connect', resolve);
       redisClient.on('error', (err) => reject(err));
     });
