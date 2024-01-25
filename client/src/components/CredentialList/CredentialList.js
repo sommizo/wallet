@@ -8,7 +8,13 @@ function CredentialList() {
 
     useEffect(() => {
         // Fetch credentials
-        fetch(API_GET_CREDENTIALS_URL)
+        fetch(API_GET_CREDENTIALS_URL, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -37,11 +43,24 @@ function CredentialList() {
     return (
         <div>
             <h1>Wallet App</h1>
-            <ul>
-                {credentials.map((credential, index) => (
-                    <li key={index}>{JSON.stringify(credential)}</li>
-                ))}
-            </ul>
+            <table className="credential-table">
+                <thead>
+                    <tr>
+                        <th>Wallet ID</th>
+                        <th>Credential Type</th>
+                        <th>Credential Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {credentials.map((credential, index) => (
+                        <tr key={index}>
+                            <td>{credential.walletId}</td>
+                            <td>{credential.credentialType}</td>
+                            <td>{JSON.stringify(credential.credential)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }
