@@ -54,15 +54,27 @@ function CredentialList() {
                 <tbody>
                     {credentials.map((credential, index) => (
                         <tr key={index}>
-                            <td>{credential.walletId}</td>
+                            <td style={{ verticalAlign: 'middle' }}>{credential.walletId}</td>
                             <td>{credential.credentialType}</td>
-                            <td>{JSON.stringify(credential.credential)}</td>
+                            <td>
+                                <pre>{formatCredentialData(credential.credential)}</pre>
+                            </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
         </div>
     );
+}
+
+// Format credential data
+function formatCredentialData(credentialData) {
+    return Object.entries(credentialData)
+        .map(([key, value]) => (
+            <div key={key}>
+                <strong>{key}:</strong> {value}
+            </div>
+        ));
 }
 
 export default CredentialList;
