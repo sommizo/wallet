@@ -1,9 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const credentialRoutes = require('./routes/credetialRoutes');
+const redis = require('redis');
 const { connectToMongo, connectToRedis } = require('./utils');
-const { addCredential } = require('./services/credentialService');
+const { addCredential, pushUpdate } = require('./services/credentialService');
 
 initialize();
 
@@ -14,9 +14,19 @@ async function initialize() {
     await initializeCredentials(redisClient);
 
     const app = express();
-    app.use(cors()); // Need to allow specific routes only when used in production
+    app.use(cors());
     app.use(bodyParser.json());
-    app.use('/api', credentialRoutes);
+
+    // Create a Redis client for pub/sub
+    const redisPubSub = redis.createClient();
+
+    app.use('/api', (req, res, next) => {
+      // Pass the Redis pub/sub client to the routes
+      req.redisPubSub = redisPubSub;
+      next();
+    });
+
+    app.use('/api', require('./routes/credetialRoutes'));
 
     app.use((req, res, next) => {
       res.status(404).send('Not Found');
@@ -43,9 +53,14 @@ const initializeCredentials = async (redisClient) => {
     for (const credentialData of initialCredentials) {
       await addCredential(redisClient, { body: credentialData }, { json: () => { } });
     }
-
     console.log('Credentials initialized successfully');
+
   } catch (error) {
     console.error('Failed to initialize credentials with error - ', error);
+  } finally {
+    // Close the Redis client after initializing credentials
+    //redisClient.quit();
   }
 };
+
+module.exports = { initializeCredentials };
