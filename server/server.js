@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const credentialRoutes = require('./routes/credetialRoutes');
 const { connectToMongo, connectToRedis } = require('./utils');
@@ -13,6 +14,7 @@ async function initialize() {
     await initializeCredentials(redisClient);
 
     const app = express();
+    app.use(cors()); // Need to allow specific routes only when used in production
     app.use(bodyParser.json());
     app.use('/api', credentialRoutes);
 
