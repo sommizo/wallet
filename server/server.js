@@ -3,7 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const redis = require('redis');
 const { connectToMongo, connectToRedis } = require('./utils');
-const { addCredential, pushUpdate } = require('./services/credentialService');
+const { addCredential } = require('./services/credentialService');
 
 initialize();
 

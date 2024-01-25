@@ -2,7 +2,6 @@ const Credential = require('../models/credential');
 const redis = require('redis');
 const config = require('../config/config');
 
-
 const clients = [];
 
 const pushUpdate = (req, res) => {
@@ -18,8 +17,7 @@ const pushUpdate = (req, res) => {
     });
 };
 
-// Somewhere in your code where you want to send updates
-// For example, after adding a new credential
+// notify client
 const sendUpdate = (updatedCredentials) => {
     clients.forEach(client => {
         client.write(`data: ${JSON.stringify(updatedCredentials)}\n\n`);
