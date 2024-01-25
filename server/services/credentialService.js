@@ -14,7 +14,7 @@ const addCredential = async (redisClient, req, res) => {
         };
 
         // Add event at the beginning of list
-        redisClient.rPush('credentialsQueue6', JSON.stringify(event));
+        redisClient.rPush('credentialsQueue', JSON.stringify(event));
         res.json({ success: true });
     } catch (error) {
         console.error('Error adding credential:', error);
