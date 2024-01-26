@@ -7,6 +7,14 @@ function CredentialList() {
 
   const API_GET_CREDENTIALS_URL = 'http://localhost:3001/api/getCredentials';
 
+  const updateLocalDatabase = (data) => {
+    setCredentials(data);
+    setLoadedFromServer(true);
+    setLoading(false);
+    // Persist data locally
+    localStorage.setItem('localWalletDatabase', JSON.stringify(data));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -23,9 +31,7 @@ function CredentialList() {
         }
 
         const data = await response.json();
-        setCredentials(data);
-        setLoadedFromServer(true);
-        setLoading(false);
+        updateLocalDatabase(data);
       } catch (error) {
         console.error('Error fetching data:', error);
         // Load data from local storage if API request fails
@@ -46,11 +52,11 @@ function CredentialList() {
   return (
     <div>
       <h1>Wallet App</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <div>
-          <p>Data {loadedFromServer ? 'loaded from server' : 'loaded from local DB'}*</p>
+      <div>
+        <p>Data {loadedFromServer ? 'loaded from server' : 'loaded from local DB'}*</p>
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
           <table className="credential-table">
             <thead>
               <tr>
@@ -71,8 +77,8 @@ function CredentialList() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
