@@ -3,92 +3,76 @@ import React, { useState, useEffect } from 'react';
 function CredentialList() {
   const [credentials, setCredentials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [localDatabase, setLocalDatabase] = useState([]);
+  const [loadedFromServer, setLoadedFromServer] = useState(false);
 
   const API_GET_CREDENTIALS_URL = 'http://localhost:3001/api/getCredentials';
 
   useEffect(() => {
-    // Fetch credentials
-    fetch(API_GET_CREDENTIALS_URL, {
-      method: 'GET',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(API_GET_CREDENTIALS_URL, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        return response.json();
-      })
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setCredentials(data);
-          updateLocalDatabase(data);
+
+        const data = await response.json();
+        setCredentials(data);
+        setLoadedFromServer(true);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Load data from local storage if API request fails
+        const localData = localStorage.getItem('localWalletDatabase');
+        setLoadedFromServer(false);
+        if (localData) {
+          setCredentials(JSON.parse(localData));
         } else {
-          throw new Error('Empty or invalid response');
+          console.error('Local data not available');
         }
-      })
-      .catch(err => setError(err))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    // Set up EventSource to receive updates
-    const eventSource = new EventSource('http://localhost:3001/api/updates');
-
-    // Handle updates
-    eventSource.onmessage = (event) => {
-      const updatedCredentials = JSON.parse(event.data);
-      setCredentials(updatedCredentials);
-      updateLocalDatabase(updatedCredentials);
+        setLoading(false);
+      }
     };
 
-    // Close EventSource on component unmount
-    return () => {
-      eventSource.close();
-    };
+    fetchData();
   }, []);
-
-  const updateLocalDatabase = (data) => {
-    setLocalDatabase(data);
-    // Persist the data locally
-    localStorage.setItem('localWalletDatabase', JSON.stringify(data));
-  };
-
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
-  if (error) {
-    return <p>Error: {error.message}</p>;
-  }
 
   return (
     <div>
       <h1>Wallet App</h1>
-      <table className="credential-table">
-        <thead>
-          <tr>
-            <th>Wallet ID</th>
-            <th>Credential Type</th>
-            <th>Credential Data</th>
-          </tr>
-        </thead>
-        <tbody>
-          {credentials.map((credential, index) => (
-            <tr key={index}>
-              <td style={{ verticalAlign: 'middle' }}>{credential.walletId}</td>
-              <td>{credential.credentialType}</td>
-              <td>
-                <pre>{formatCredentialData(credential.credential)}</pre>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div>
+          <p>Data {loadedFromServer ? 'loaded from server' : 'loaded from local DB'}*</p>
+          <table className="credential-table">
+            <thead>
+              <tr>
+                <th>Wallet ID</th>
+                <th>Credential Type</th>
+                <th>Credential Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              {credentials.map((credential, index) => (
+                <tr key={index}>
+                  <td style={{ verticalAlign: 'middle' }}>{credential.walletId}</td>
+                  <td>{credential.credentialType}</td>
+                  <td>
+                    <pre>{formatCredentialData(credential.credential)}</pre>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
