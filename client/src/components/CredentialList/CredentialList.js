@@ -85,6 +85,9 @@ function CredentialList() {
 
 // Format credentials data
 function formatCredentialData(credentialData) {
+  if (!credentialData) {
+    return [];
+  }
   return Object.entries(credentialData)
     .map(([key, value]) => (
       <div key={key}>

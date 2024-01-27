@@ -1,30 +1,6 @@
 const Credential = require('../models/credential');
-const redis = require('redis');
-const config = require('../config/config');
 
-const clients = [];
-
-const pushUpdate = (req, res) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    clients.push(res);
-
-    req.on('close', () => {
-        // Remove the client when the connection is closed
-        clients.splice(clients.indexOf(res), 1);
-    });
-};
-
-// notify client
-const sendUpdate = (updatedCredentials) => {
-    clients.forEach(client => {
-        client.write(`data: ${JSON.stringify(updatedCredentials)}\n\n`);
-    });
-};
-
-
+// Add the new credential data to both MongoDB and the Redis queue
 const addCredential = async (redisClient, req, res) => {
     try {
         const newCredential = new Credential(req.body);
@@ -35,13 +11,7 @@ const addCredential = async (redisClient, req, res) => {
             credential: req.body,
             timestamp: new Date().toISOString(),
         };
-
-        // Add event at the beginning of the list
-        redisClient.rPush('credentialsQueue', JSON.stringify(event));
-
-        // Send update to connected clients
-        sendUpdate([req.body]);
-
+        await redisClient.lPush('credentialsQueue', JSON.stringify(event));
         res.json({ success: true });
     } catch (error) {
         console.error('Error adding credential:', error);
@@ -49,6 +19,7 @@ const addCredential = async (redisClient, req, res) => {
     }
 };
 
+// Get credentials from MongoDB
 const getCredentials = async (req, res) => {
     try {
       const credentials = await Credential.find();
@@ -57,24 +28,48 @@ const getCredentials = async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   };
+
+// Get credentials from Redis queue
+const gggetCredentials = async (redisClient, req, res) => {
+    if (!redisClient) {
+        redisClient = await connectToRedis();
+    }
+    try {
+        const credentials = await redisClient.lRange('credentialsQueue', 0, -1);
+        const parsedCredentials = credentials.map(JSON.parse);
+
+        res.json(parsedCredentials);
+    } catch (error) {
+        console.error('Error getting credentials from Redis queue:', error);
+
+        // Check if res is an instance of the Express response object
+        if (res && res.status) {
+            res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+            console.error('Invalid response object:', res);
+        }
+    }
+};
+const initializeCredentials = async (redisClient) => {
+    const initialCredentials = [
+      { walletId: 34, credentialType: 'diplome', credential: { nom: 'bac', annee: 2023, etablissement: 'lycee Émile Sabord' } },
+      { walletId: 34, credentialType: 'driver licence', credential: { annee: 2020, id: '33434', type: 'B', firstname: 'Mehdi', lastname: 'Khaman' } },
+      { walletId: 34, credentialType: 'employee', credential: { firstname: 'mehdi', lastname: 'khaman', annee: 2020, matricule: '434', role: 'manager bu digital trust services' } }
+    ];
   
-const getUpdates = (req, res) => {
-    // Create a Redis pub/sub client for listening to updates
-    const redisSub = req.redisPubSub.duplicate();
+    try {
+      for (const credentialData of initialCredentials) {
+        await addCredential(redisClient, { body: credentialData }, { json: () => { } });
+      }
+      console.log('Credentials initialized successfully');
   
-    redisSub.subscribe('credentialsUpdate');
-    redisSub.on('message', (channel, message) => {
-      res.write(`data: ${message}\n\n`);
-    });
-  
-    // Close the Redis pub/sub client on client disconnect
-    req.on('close', () => {
-      redisSub.quit();
-    });
+    } catch (error) {
+      console.error('Failed to initialize credentials with error - ', error);
+    }
   };
 
 module.exports = {
     addCredential,
     getCredentials,
-    getUpdates,
+    initializeCredentials,
 };

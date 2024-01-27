@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const redis = require('redis');
-const config = require('./config/config');
+const config = require('./config/urls');
 
 async function connectToMongo() {
   try {
