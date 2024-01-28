@@ -1,4 +1,5 @@
 const Credential = require('../models/credential');
+const { connectToRedis } = require('../utils');
 
 // Add the new credential data to both MongoDB and the Redis queue
 const addCredential = async (redisClient, req, res) => {
@@ -20,9 +21,10 @@ const addCredential = async (redisClient, req, res) => {
 };
 
 // Get credentials from MongoDB
-const getCredentials = async (req, res) => {
+const gggetCredentials = async (req, res) => {
     try {
       const credentials = await Credential.find();
+      console.log('credentials:' + credentials)
       res.json(credentials);
     } catch (error) {
       res.status(500).json({ error: 'Internal Server Error' });
@@ -30,15 +32,12 @@ const getCredentials = async (req, res) => {
   };
 
 // Get credentials from Redis queue
-const gggetCredentials = async (redisClient, req, res) => {
-    if (!redisClient) {
-        redisClient = await connectToRedis();
-    }
+const getCredentials = async (req, res) => {
     try {
-        const credentials = await redisClient.lRange('credentialsQueue', 0, -1);
-        const parsedCredentials = credentials.map(JSON.parse);
-
-        res.json(parsedCredentials);
+        const redisClient = await connectToRedis();
+        const credentialsQueue = await redisClient.lRange('credentialsQueue', 0, -1);
+        const parsedCredentialsQueue = credentialsQueue.map(JSON.parse).map((item) => item.credential);
+        res.json(parsedCredentialsQueue);
     } catch (error) {
         console.error('Error getting credentials from Redis queue:', error);
 
@@ -48,6 +47,9 @@ const gggetCredentials = async (redisClient, req, res) => {
         } else {
             console.error('Invalid response object:', res);
         }
+    }
+    finally {
+        //redisClient.close()
     }
 };
 const initializeCredentials = async (redisClient) => {
