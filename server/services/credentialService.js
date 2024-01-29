@@ -54,9 +54,11 @@ const getCredentials = async (req, res) => {
             const parsedCredentialsQueue = credentialsQueue.map(JSON.parse).map((item) => item.credentialData);
             // parsedCredentialsQueue = fetchCredentialsfromRedis(redisClient)
 
-            // TODO - Update credentialsCache
-            // credentialsCache.length = 0;
-            // credentialsCache.push(JSON.stringify(parsedCredentialsQueue));
+            // // TODO - Update credentialsCache
+            // if (redisClient){
+            //     credentialsCache.length = 0;
+            //     credentialsCache.push(JSON.stringify(parsedCredentialsQueue));
+            // }
             res.json(parsedCredentialsQueue);
         } catch (error) {
             console.error('Error getting credentials from Redis queue:', error);
