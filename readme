@@ -1,0 +1,27 @@
+Au lancement du server, une connexion est établie avec MongoDB et Redis.
+la methode initializeCredentials() permet d'ajouter 3 credentials à travers addCredential().
+Cette dernière persiste les credentials dans MongoDB, publie un message sur Redis et met à jour le cache coté server qui stockera ces credentials et pourra les retourner en cas de non disponibilité de Redis.
+
+Côté client, au lancement de la page, le client appelle http://localhost:3001/api/getCredentials pour obtenir les credentials à afficher.
+En obtenant ces credentials, il actualise son localStorage pour garder le résultat de cet appel en mémoire et pouvoir dna sle futur afficher les credentials depuis ce localStorage si le server ne répond pas.
+
+
+Améliorations à apporter:
+- Meilleure gestion des connexions Redis avec un système de connexions pool
+- implémentation du mecanisme de Pub/Sub entre Redis et le serveur (backend)
+
+Bénéfices:
+Cette architecture répond aux besoin d'une architecture en microservices.
+L'utilisation de MongoDB favorise la scalabilité horizontale.
+Authentification forte via FIDO2, renforçant la sécurité en utilisant des clés matérielles pour l'authentification.
+Les microservices facilitent la maintenance et les mises à jour car chaque service peut être géré indépendamment.
+
+Limites:
+L'architecture basée sur des microservices introduit une complexité supplémentaire en termes de gestion et de coordination entre les services.
+La mise en place d'une architecture microservices peut nécessiter des ressources initiales importantes en termes de développement et de configuration.
+
+Esce que cette architecture est utilisable pour un million d'utilisateurs? : 
+ - Pour gérer un million d'utilisateurs, une optimisation minutieuse des requêtes, des index MongoDB et une gestion efficace de la charge sont essentielles.
+ - L'utilisation de services cloud peut faciliter la scalabilité en fournissant des ressources à la demande.
+
+En résumé, cette architecture est robuste et peut être adaptée pour gérer un grand nombre d'utilisateurs avec une planification et une optimisation appropriées

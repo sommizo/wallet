@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { connectToMongo } = require('./utils');
+const { connectToMongo } = require('./services/connections');
 const { initializeCredentials } = require('./services/credentialService');
 
 initialize();

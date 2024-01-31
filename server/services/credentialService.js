@@ -1,7 +1,8 @@
 const Credential = require('../models/credential');
-const { connectToRedis } = require('../utils');
+const { connectToRedis } = require('./connections');
 // In-memory credentials cache
 const { credentialsCache } = require('../credentialsCache');
+const { updateCache } = require('./cacheService');
 
 // Add the new credential data to both MongoDB and the Redis queue
 const addCredential = async (req, res) => {
@@ -19,6 +20,9 @@ const addCredential = async (req, res) => {
 
         // Add the event to credentialsCache
         credentialsCache.push(JSON.parse(JSON.stringify(event)).credentialData);
+        
+      // Publish an update event to notify subscribers
+      // redisClient.publish('credentialsQueueUpdate', 'update');
 
         res.json({ success: true });
     } catch (error) {
@@ -31,7 +35,6 @@ const addCredential = async (req, res) => {
         }
     }
 };
-
 // Get credentials from MongoDB
 const getCredentialsFromMongo = async (req, res) => {
     try {
@@ -52,13 +55,9 @@ const getCredentials = async (req, res) => {
             // Fetch data from Redis queue
             const credentialsQueue = await redisClient.lRange('credentialsQueue', 0, -1);
             const parsedCredentialsQueue = credentialsQueue.map(JSON.parse).map((item) => item.credentialData);
-            // parsedCredentialsQueue = fetchCredentialsfromRedis(redisClient)
 
-            // // TODO - Update credentialsCache
-            // if (redisClient){
-            //     credentialsCache.length = 0;
-            //     credentialsCache.push(JSON.stringify(parsedCredentialsQueue));
-            // }
+            // Update credentialsCache using the cache service
+            // updateCache(parsedCredentialsQueue);
             res.json(parsedCredentialsQueue);
         } catch (error) {
             console.error('Error getting credentials from Redis queue:', error);
@@ -83,14 +82,8 @@ const getCredentials = async (req, res) => {
     }
 };
 
-// const fetchCredentialsfromRedis = async (redisClient) => {
-//     const credentialsQueue = await redisClient.lRange('credentialsQueue', 0, -1);
-//     return credentialsQueue.map(JSON.parse).map((item) => item.credentialData);
-// };
-
-
 const initializeCredentials = async () => {
-    const initialCredentials = [
+       const initialCredentials = [
         { walletId: 34, credentialType: 'diplome', credential: { nom: 'bac', annee: 2023, etablissement: 'lycee Émile Sabord' } },
         { walletId: 34, credentialType: 'driver licence', credential: { annee: 2020, id: '33434', type: 'B', firstname: 'Mehdi', lastname: 'Khaman' } },
         { walletId: 34, credentialType: 'employee', credential: { firstname: 'mehdi', lastname: 'khaman', annee: 2020, matricule: '434', role: 'manager bu digital trust services' } }

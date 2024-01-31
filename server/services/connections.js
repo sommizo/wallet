@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const redis = require('redis');
-const config = require('./config/urls');
+const config = require('../config/urls');
+
+const { promisify } = require('util');
 
 async function connectToMongo() {
   try {
@@ -29,6 +31,27 @@ const connectToRedis = () => {
       });
   });
 };
+
+// Connect and subscribe to Redis
+// const connectToRedis = async () => {
+//   const redisClient = redis.createClient(config.redis);
+
+//   const connectAsync = promisify(redisClient.connect).bind(redisClient);
+//   const subscribeAsync = promisify(redisClient.subscribe).bind(redisClient);
+
+//   try {
+//     await connectAsync();
+//     console.log('Connected to Redis');
+
+//     const subscriber = redis.createClient(config.redis);
+//     await subscribeAsync.call(subscriber, 'credentialsQueueUpdate');
+
+//     return { publisher: redisClient, subscriber };
+//   } catch (error) {
+//     console.error(`Error connecting to Redis: ${error}`);
+//     throw error;
+//   }
+// };
 
 module.exports = {
   connectToMongo,
